@@ -1,50 +1,23 @@
-Add-Type @"
-using System;
-using System.Text;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
 
-public class WindowsEnumerator {
-    public delegate bool EnumWindowsProc(IntPtr hWnd, int lParam);
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "Text Overlay"
+$form.TopMost = $true
+$form.WindowState = [System.Windows.Forms.FormWindowState]::Maximized
+$form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
+$form.BackColor = [System.Drawing.Color]::Black
+$form.Opacity = 0.5
+$form.TransparencyKey = $form.BackColor
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    public static extern int GetWindowText(IntPtr hWnd, StringBuilder strText, int maxCount);
+$label = New-Object System.Windows.Forms.Label
+$label.Text = "Hello, World!"
+$label.Font = New-Object System.Drawing.Font("Arial", 48, [System.Drawing.FontStyle]::Bold)
+$label.AutoSize = $true
+$label.ForeColor = [System.Drawing.Color]::White
+$label.BackColor = [System.Drawing.Color]::Transparent
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    public static extern int GetWindowTextLength(IntPtr hWnd);
+$form.Controls.Add($label)
 
-    [DllImport("user32.dll")]
-    public static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
-
-    [DllImport("user32.dll")]
-    public static extern bool IsWindowVisible(IntPtr hWnd);
-
-    public static List<string> GetOpenWindows() {
-        IntPtr lShellWindow = GetShellWindow();
-        List<string> list = new List<string>();
-
-        EnumWindows(delegate (IntPtr hWnd, int lParam) {
-            if (hWnd == lShellWindow) return true;
-            if (!IsWindowVisible(hWnd)) return true;
-
-            int length = GetWindowTextLength(hWnd);
-            if (length == 0) return true;
-
-            StringBuilder builder = new StringBuilder(length);
-            GetWindowText(hWnd, builder, length + 1);
-
-            list.Add(builder.ToString());
-            return true;
-        }, IntPtr.Zero);
-
-        return list;
-    }
-
-    [DllImport("user32.dll")]
-    static extern IntPtr GetShellWindow();
-}
-"@
-
-foreach ($window in [WindowsEnumerator]::GetOpenWindows()) {
-    Write-Host $window
-}
+$form.Add_Shown({$form.Activate()})
+[System.Windows.Forms.Application]::Run($form)
