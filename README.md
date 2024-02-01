@@ -1,23 +1,24 @@
-Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
+# Load the required .NET assembly
+Add-Type -TypeDefinition @"
+    using System;
+    using System.Drawing;
+    using System.Windows.Forms;
+"@
 
-$form = New-Object System.Windows.Forms.Form
-$form.Text = "Text Overlay"
-$form.TopMost = $true
-$form.WindowState = [System.Windows.Forms.FormWindowState]::Maximized
-$form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
-$form.BackColor = [System.Drawing.Color]::Black
-$form.Opacity = 0.5
-$form.TransparencyKey = $form.BackColor
+# Capture the screen
+$screen = [System.Windows.Forms.SystemInformation]::VirtualScreen
+$bitmap = New-Object Drawing.Bitmap $screen.Width, $screen.Height
+$graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+$graphics.CopyFromScreen($screen.Left, $screen.Top, 0, 0, $screen.Size)
 
-$label = New-Object System.Windows.Forms.Label
-$label.Text = "Hello, World!"
-$label.Font = New-Object System.Drawing.Font("Arial", 48, [System.Drawing.FontStyle]::Bold)
-$label.AutoSize = $true
-$label.ForeColor = [System.Drawing.Color]::White
-$label.BackColor = [System.Drawing.Color]::Transparent
+# Specify the path and filename for the screenshot (change as needed)
+$filePath = "C:\path\to\screenshot.png"
 
-$form.Controls.Add($label)
+# Save the screenshot as an image file (PNG format)
+$bitmap.Save($filePath, [System.Drawing.Imaging.ImageFormat]::Png)
 
-$form.Add_Shown({$form.Activate()})
-[System.Windows.Forms.Application]::Run($form)
+# Clean up resources
+$graphics.Dispose()
+$bitmap.Dispose()
+
+Write-Host "Screenshot saved to: $filePath"
